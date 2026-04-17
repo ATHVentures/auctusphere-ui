@@ -161,6 +161,8 @@ const App = {
             case 'inventory': this.loadInventoryData(); break;
             case 'menu': this.loadMenuItems(); break;
             case 'reports': this.loadReport(); break;
+            case 'invoices': this.loadInvoices(); break;
+            case 'alerts': this.loadPriceAlerts(); break;
         }
     },
 
@@ -563,6 +565,116 @@ const App = {
         } catch (err) { console.error(err); }
     },
 
+    // ── INVOICE ARCHIVE ──
+    async loadInvoices() {
+        const year = document.getElementById('inv-filter-year')?.value || '';
+        const month = document.getElementById('inv-filter-month')?.value || '';
+        const params = {};
+        if (year) params.year = year;
+        if (month) params.month = month;
+        try {
+            // Populate year filter dynamically
+            const yearEl = document.getElementById('inv-filter-year');
+            if (yearEl && yearEl.options.length === 1) {
+                const currentYear = new Date().getFullYear();
+                for (let y = currentYear; y >= currentYear - 3; y--) {
+                    const opt = document.createElement('option');
+                    opt.value = y; opt.textContent = y;
+                    yearEl.appendChild(opt);
+                }
+            }
+            const data = await API.getInvoices(params);
+            const wrap = document.getElementById('invoices-table');
+            if (!data.length) {
+                wrap.innerHTML = `<div class="empty-state"><i data-lucide="archive" style="width:40px;height:40px;color:var(--text-muted)"></i><h3>No invoices yet</h3><p>Scan your first invoice to start building your archive.</p><button class="btn primary" onclick="App.navigate('scanner')">Scan Invoice</button></div>`;
+                lucide.createIcons(); return;
+            }
+            const rows = data.map(inv => [
+                inv.invoice_date || '—',
+                inv.vendor || '—',
+                inv.total_amount ? '<span class="amount">$' + inv.total_amount.toFixed(2) + '</span>' : '—',
+                inv.original_filename || inv.filename,
+                `<button class="btn small outline" onclick="App.viewInvoice(${inv.id},'${(inv.vendor||'Invoice').replace(/'/g,'')}')" style="margin-right:6px">View</button><button class="btn small outline" style="color:var(--danger);border-color:var(--danger)" onclick="App.deleteInvoice(${inv.id})">Delete</button>`
+            ]);
+            wrap.innerHTML = this.buildTable(['Date','Vendor','Total','File',''], rows);
+            lucide.createIcons();
+        } catch(err) { console.error(err); }
+    },
+
+    async viewInvoice(id, vendor) {
+        const modal = document.getElementById('invoice-modal');
+        const content = document.getElementById('invoice-modal-content');
+        document.getElementById('invoice-modal-title').textContent = vendor + ' — Invoice';
+        content.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner-lg"></div></div>';
+        modal.classList.remove('hidden');
+        try {
+            const url = await API.getInvoiceFile(id);
+            const token = API.getToken();
+            content.innerHTML = `<img src="${url}?token=${token}" style="width:100%;border-radius:8px" onerror="this.parentElement.innerHTML='<p style=color:var(--text-muted)>Could not load invoice image.</p>'">`;
+        } catch(err) { content.innerHTML = '<p style="color:var(--danger)">Error loading invoice.</p>'; }
+    },
+
+    closeInvoiceModal() {
+        document.getElementById('invoice-modal').classList.add('hidden');
+    },
+
+    async deleteInvoice(id) {
+        if (!confirm('Remove this invoice from the archive?')) return;
+        try {
+            await API.deleteInvoice(id);
+            this.toast('Invoice removed', 'success');
+            this.loadInvoices();
+        } catch(err) { this.toast('Error: ' + err.message, 'error'); }
+    },
+
+    // ── PRICE ALERTS ──
+    async loadPriceAlerts() {
+        const wrap = document.getElementById('alerts-list');
+        try {
+            const data = await API.getPriceAlerts();
+            // Update badge
+            const badge = document.getElementById('alerts-badge');
+            if (data.length > 0) {
+                badge.textContent = data.length;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+            if (!data.length) {
+                wrap.innerHTML = `<div class="empty-state"><i data-lucide="bell" style="width:40px;height:40px;color:var(--text-muted)"></i><h3>No price alerts</h3><p>Price changes will appear here when detected from scanned invoices.</p></div>`;
+                lucide.createIcons(); return;
+            }
+            wrap.innerHTML = data.map(alert => `
+                <div class="alert-card ${alert.change_pct > 0 ? 'alert-up' : 'alert-down'}" id="alert-${alert.id}">
+                    <div class="alert-icon">
+                        <i data-lucide="${alert.change_pct > 0 ? 'trending-up' : 'trending-down'}" style="width:20px;height:20px"></i>
+                    </div>
+                    <div class="alert-body">
+                        <div class="alert-title">${alert.item_name} ${alert.change_pct > 0 ? 'increased' : 'decreased'} ${Math.abs(alert.change_pct).toFixed(1)}%</div>
+                        <div class="alert-meta">
+                            ${alert.vendor ? alert.vendor + ' · ' : ''}
+                            $${(alert.old_price||0).toFixed(3)} → $${(alert.new_price||0).toFixed(3)}
+                            ${alert.unit ? ' per ' + alert.unit : ''}
+                        </div>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn small primary" onclick="App.resolveAlert(${alert.id},'approved')">Approve</button>
+                        <button class="btn small outline" onclick="App.resolveAlert(${alert.id},'dismissed')">Dismiss</button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        } catch(err) { wrap.innerHTML = '<p class="empty">Could not load alerts.</p>'; }
+    },
+
+    async resolveAlert(id, status) {
+        try {
+            await API.updatePriceAlert(id, status);
+            this.toast(status === 'approved' ? 'Alert approved — update your menu prices if needed.' : 'Alert dismissed.', 'success');
+            this.loadPriceAlerts();
+        } catch(err) { this.toast('Error: ' + err.message, 'error'); }
+    },
+
     // ── SUBMIT HANDLERS ──
     async submitPurchase(e) {
         e.preventDefault();
@@ -756,7 +868,15 @@ const App = {
 
             const result = await API.scanInvoice(formData);
             this.renderScannerResults(result);
-            this.toast('Invoice scanned! Review and approve.', 'success');
+            // Show price alerts if any were detected
+            if (result.price_alerts && result.price_alerts.length > 0) {
+                this.toast(`⚠️ ${result.price_alerts.length} price change${result.price_alerts.length > 1 ? 's' : ''} detected — check Price Alerts`, 'info');
+                const badge = document.getElementById('alerts-badge');
+                badge.textContent = result.price_alerts.length;
+                badge.style.display = '';
+            } else {
+                this.toast('Invoice scanned! Review and approve.', 'success');
+            }
         } catch (err) {
             this.toast('Scan failed: ' + err.message, 'error');
             document.getElementById('scanner-drop').classList.remove('hidden');

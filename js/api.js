@@ -122,6 +122,19 @@ const API = {
     async deleteMenuItem(id) { return this.request('DELETE', `/menu/items/${id}`); },
     async delete(path) { return this.request('DELETE', path); },
 
+    // Invoices
+    async getInvoices(params = {}) {
+        const q = new URLSearchParams(params).toString();
+        return this.request('GET', `/data/invoices${q ? '?' + q : ''}`);
+    },
+    async getInvoiceFile(id) { return `${this.baseUrl}/data/invoices/${id}/file`; },
+    async deleteInvoice(id) { return this.request('DELETE', `/data/invoices/${id}`); },
+    async getPriceHistory(itemName) { return this.request('GET', `/data/invoices/price-history/${encodeURIComponent(itemName)}`); },
+
+    // Price Alerts
+    async getPriceAlerts() { return this.request('GET', '/data/price-alerts'); },
+    async updatePriceAlert(id, status) { return this.request('PATCH', `/data/price-alerts/${id}`, { status }); },
+
     async scanInvoice(formData) {
         const res = await fetch(`${this.baseUrl}/data/scan-invoice`, {
             method: 'POST',

@@ -111,6 +111,13 @@
                     <a class="nav-item" data-page="scanner">
                         <i data-lucide="scan" class="icon"></i> Invoice Scanner
                     </a>
+                    <a class="nav-item" data-page="invoices">
+                        <i data-lucide="archive" class="icon"></i> Invoice Archive
+                    </a>
+                    <a class="nav-item" data-page="alerts">
+                        <i data-lucide="bell" class="icon"></i> Price Alerts
+                        <span class="nav-badge" id="alerts-badge" style="display:none">0</span>
+                    </a>
                     <a class="nav-item" data-page="menu">
                         <i data-lucide="utensils" class="icon"></i> Menu Items
                     </a>
@@ -284,6 +291,47 @@
                         <p style="margin-top:8px;color:var(--text-muted);font-size:13px">This usually takes 5-10 seconds</p>
                     </div>
                     <div id="scanner-results" class="hidden"></div>
+                </div>
+
+                <!-- Invoice Archive -->
+                <div id="page-invoices" class="page">
+                    <div class="page-header">
+                        <div><h2>Invoice Archive</h2><p class="page-sub">Every scanned invoice, organized and searchable.</p></div>
+                        <div class="header-controls">
+                            <select id="inv-filter-year" onchange="App.loadInvoices()" style="padding:9px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-raised);color:var(--text);font-size:14px">
+                                <option value="">All Time</option>
+                            </select>
+                            <select id="inv-filter-month" onchange="App.loadInvoices()" style="padding:9px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-raised);color:var(--text);font-size:14px">
+                                <option value="">All Months</option>
+                                <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+                                <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+                                <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+                                <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="invoices-table" class="data-table-wrap"></div>
+                </div>
+
+                <!-- Invoice Viewer Modal -->
+                <div id="invoice-modal" class="modal-overlay hidden" onclick="if(event.target===this)App.closeInvoiceModal()">
+                    <div class="modal" style="max-width:700px">
+                        <div class="modal-header">
+                            <h3 id="invoice-modal-title">Invoice</h3>
+                            <button class="modal-close" onclick="App.closeInvoiceModal()"><i data-lucide="x" style="width:16px;height:16px"></i></button>
+                        </div>
+                        <div class="modal-body" style="max-height:75vh;overflow-y:auto">
+                            <div id="invoice-modal-content"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Alerts -->
+                <div id="page-alerts" class="page">
+                    <div class="page-header">
+                        <div><h2>Price Alerts</h2><p class="page-sub">Ingredient price changes detected from your invoices.</p></div>
+                    </div>
+                    <div id="alerts-list"></div>
                 </div>
 
             </main>
