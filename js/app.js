@@ -701,10 +701,49 @@ const App = {
 
     async resolveAlert(id, status) {
         try {
-            await API.updatePriceAlert(id, status);
-            this.toast(status === 'approved' ? 'Alert approved — update your menu prices if needed.' : 'Alert dismissed.', 'success');
+            const res = await API.updatePriceAlert(id, status);
+            if (status === 'approved' && res.suggested_menu_updates && res.suggested_menu_updates.length > 0) {
+                this.showMenuUpdateModal(res.suggested_menu_updates);
+            } else {
+                this.toast(status === 'approved' ? 'Alert approved — no matching menu items found.' : 'Alert dismissed.', 'success');
+            }
             this.loadPriceAlerts();
         } catch(err) { this.toast('Error: ' + err.message, 'error'); }
+    },
+
+    showMenuUpdateModal(updates) {
+        const modal = document.getElementById('menu-update-modal');
+        const list = document.getElementById('menu-update-list');
+        list.innerHTML = updates.map(u => `
+            <div class="menu-update-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee">
+                <div>
+                    <strong>${u.menu_item_name}</strong><br>
+                    <span style="color:#666;font-size:13px">$${(u.current_recipe_cost||0).toFixed(2)} &rarr; <strong style="color:#2d6a4f">$${(u.suggested_recipe_cost||0).toFixed(2)}</strong></span>
+                </div>
+                <button class="btn small primary" onclick="App.applyMenuCostUpdate(${u.menu_item_id}, ${u.suggested_recipe_cost}, this)">Update Price</button>
+            </div>
+        `).join('');
+        modal.classList.remove('hidden');
+    },
+
+    closeMenuUpdateModal() {
+        document.getElementById('menu-update-modal').classList.add('hidden');
+    },
+
+    async applyMenuCostUpdate(itemId, newCost, btn) {
+        try {
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+            await API.updateMenuItemCost(itemId, newCost);
+            btn.textContent = '✓ Updated';
+            btn.classList.remove('primary');
+            btn.classList.add('outline');
+            this.toast('Menu item cost updated!', 'success');
+        } catch(err) {
+            btn.disabled = false;
+            btn.textContent = 'Update Price';
+            this.toast('Error: ' + err.message, 'error');
+        }
     },
 
     // ── SUBMIT HANDLERS ──

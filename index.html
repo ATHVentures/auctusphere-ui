@@ -326,6 +326,23 @@
                     </div>
                 </div>
 
+                <!-- Menu Price Update Modal -->
+                <div id="menu-update-modal" class="modal-overlay hidden" onclick="if(event.target===this)App.closeMenuUpdateModal()">
+                    <div class="modal" style="max-width:560px">
+                        <div class="modal-header">
+                            <h3>Update Menu Prices</h3>
+                            <button class="modal-close" onclick="App.closeMenuUpdateModal()"><i data-lucide="x" style="width:16px;height:16px"></i></button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="color:#666;margin-bottom:12px">The following menu items may be affected by this price change. Update their recipe costs?</p>
+                            <div id="menu-update-list"></div>
+                        </div>
+                        <div class="modal-footer" style="padding:16px;text-align:right">
+                            <button class="btn outline" onclick="App.closeMenuUpdateModal()">Skip</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Price Alerts -->
                 <div id="page-alerts" class="page">
                     <div class="page-header">

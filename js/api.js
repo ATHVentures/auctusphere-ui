@@ -135,6 +135,7 @@ const API = {
     // Price Alerts
     async getPriceAlerts() { return this.request('GET', '/data/price-alerts'); },
     async updatePriceAlert(id, status) { return this.request('PATCH', `/data/price-alerts/${id}`, { status }); },
+    async updateMenuItemCost(id, recipeCost) { return this.request('PATCH', `/menu/items/${id}/recipe-cost`, { recipe_cost: recipeCost }); },
 
     async scanInvoice(formData) {
         const res = await fetch(`${this.baseUrl}/data/scan-invoice`, {
