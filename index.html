@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auctusphere — Restaurant Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <div class="logo">
+                    <div class="logo-icon">A</div>
+                    <h1>Auctusphere</h1>
+                    <p class="tagline">Restaurant Intelligence Platform</p>
+                    <p class="sub-tagline">Project ATH</p>
+                </div>
+                <div id="login-tab-bar" class="tab-bar">
+                    <button class="tab active" data-tab="login">Sign In</button>
+                    <button class="tab" data-tab="signup">Get Started</button>
+                </div>
+                <form id="login-form" class="form active">
+                    <div class="field">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" placeholder="owner@restaurant.com" required>
+                    </div>
+                    <div class="field">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn primary full">Sign In</button>
+                    <div id="login-error" class="error-msg"></div>
+                </form>
+                <form id="signup-form" class="form">
+                    <div class="field">
+                        <label for="signup-restaurant">Restaurant Name</label>
+                        <input type="text" id="signup-restaurant" placeholder="Your Restaurant" required>
+                    </div>
+                    <div class="field">
+                        <label for="signup-name">Your Name</label>
+                        <input type="text" id="signup-name" placeholder="John Smith" required>
+                    </div>
+                    <div class="field">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" placeholder="owner@restaurant.com" required>
+                    </div>
+                    <div class="field">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" placeholder="Min 8 characters" required minlength="8">
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="signup-city">City</label>
+                            <input type="text" id="signup-city" placeholder="Austin">
+                        </div>
+                        <div class="field">
+                            <label for="signup-state">State</label>
+                            <input type="text" id="signup-state" placeholder="TX">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="signup-target">Target Food Cost %</label>
+                        <input type="number" id="signup-target" value="30" min="15" max="50" step="0.5">
+                    </div>
+                    <button type="submit" class="btn primary full">Create Account</button>
+                    <div id="signup-error" class="error-msg"></div>
+                    <div id="signup-success" class="success-msg"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="main-app" class="screen">
+            <button class="mobile-toggle" onclick="App.toggleSidebar()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="sidebar-overlay" onclick="App.toggleSidebar()"></div>
+
+            <nav id="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo-small">A</div>
+                    <span class="brand">Auctusphere</span>
+                </div>
+                <div class="nav-items">
+                    <a class="nav-item active" data-page="dashboard">
+                        <i data-lucide="layout-dashboard" class="icon"></i> Dashboard
+                    </a>
+                    <a class="nav-item" data-page="purchases">
+                        <i data-lucide="shopping-cart" class="icon"></i> Purchases
+                    </a>
+                    <a class="nav-item" data-page="sales">
+                        <i data-lucide="dollar-sign" class="icon"></i> Sales
+                    </a>
+                    <a class="nav-item" data-page="waste">
+                        <i data-lucide="trash-2" class="icon"></i> Waste Log
+                    </a>
+                    <a class="nav-item" data-page="inventory">
+                        <i data-lucide="package" class="icon"></i> Inventory
+                    </a>
+                    <a class="nav-item" data-page="reports">
+                        <i data-lucide="file-text" class="icon"></i> Reports
+                    </a>
+                    <a class="nav-item" data-page="scanner">
+                        <i data-lucide="scan" class="icon"></i> Invoice Scanner
+                    </a>
+                    <a class="nav-item" data-page="menu">
+                        <i data-lucide="utensils" class="icon"></i> Menu Items
+                    </a>
+                </div>
+                <div class="sidebar-footer">
+                    <div id="restaurant-name" class="restaurant-label">—</div>
+                    <div id="subscription-tier" class="tier-badge founding">Founding Member</div>
+                    <button id="logout-btn" class="btn small outline" style="color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.15);">
+                        <i data-lucide="log-out" style="width:14px;height:14px;"></i> Sign Out
+                    </button>
+                </div>
+            </nav>
+
+            <main id="content">
+                <!-- Dashboard -->
+                <div id="page-dashboard" class="page active">
+                    <div class="page-header">
+                        <h2>Dashboard</h2>
+                        <span id="dash-date" class="date-label"></span>
+                    </div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">Food Cost</div>
+                            <div class="kpi-value" id="kpi-food-cost">—%</div>
+                            <div class="kpi-sub" id="kpi-food-target">Target: —%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Monthly Revenue</div>
+                            <div class="kpi-value" id="kpi-revenue">$—</div>
+                            <div class="kpi-sub">This month</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Monthly Purchases</div>
+                            <div class="kpi-value" id="kpi-purchases">$—</div>
+                            <div class="kpi-sub">This month</div>
+                        </div>
+                        <div class="kpi-card accent">
+                            <div class="kpi-label">Savings Opportunity</div>
+                            <div class="kpi-value" id="kpi-savings">$—</div>
+                            <div class="kpi-sub">Estimated monthly</div>
+                        </div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-card"><h3>Food Cost Trend</h3><canvas id="chart-food-cost"></canvas></div>
+                        <div class="chart-card"><h3>Purchase Breakdown</h3><canvas id="chart-purchases"></canvas></div>
+                    </div>
+                    <div class="section-card"><h3>Action Items</h3><ul id="action-items" class="action-list"><li class="empty">No data yet — start logging purchases and sales to see insights.</li></ul></div>
+                    <div class="section-card"><h3>Top Waste Items</h3><div id="waste-items" class="waste-list"><p class="empty">No waste entries yet.</p></div></div>
+                </div>
+
+                <!-- Purchases -->
+                <div id="page-purchases" class="page">
+                    <div class="page-header"><div><h2>Purchases</h2><p class="page-sub">Track all food and beverage purchases from vendors.</p></div><button class="btn primary" onclick="App.toggleForm('purchase-form')"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Purchase</button></div>
+                    <div id="purchase-form" class="entry-form hidden">
+                        <h3>New Purchase</h3>
+                        <form onsubmit="App.submitPurchase(event)">
+                            <div class="form-grid">
+                                <div class="field"><label>Date</label><input type="date" id="p-date" required></div>
+                                <div class="field"><label>Vendor</label><input type="text" id="p-vendor" placeholder="Sysco, US Foods..."></div>
+                                <div class="field"><label>Category</label><select id="p-category" required><option value="protein">Protein</option><option value="produce">Produce</option><option value="dairy">Dairy</option><option value="dry_goods">Dry Goods</option><option value="beverages">Beverages</option><option value="frozen">Frozen</option><option value="bakery">Bakery</option><option value="other">Other</option></select></div>
+                                <div class="field"><label>Amount ($)</label><input type="number" id="p-amount" step="0.01" min="0" required></div>
+                                <div class="field full"><label>Description</label><input type="text" id="p-desc" placeholder="Weekly protein order..."></div>
+                            </div>
+                            <div class="form-actions"><button type="submit" class="btn primary">Save Purchase</button><button type="button" class="btn outline" onclick="App.toggleForm('purchase-form')">Cancel</button></div>
+                        </form>
+                    </div>
+                    <div id="purchases-table" class="data-table-wrap"></div>
+                </div>
+
+                <!-- Sales -->
+                <div id="page-sales" class="page">
+                    <div class="page-header"><div><h2>Sales</h2><p class="page-sub">Log daily revenue to calculate your food cost percentage.</p></div><button class="btn primary" onclick="App.toggleForm('sales-form')"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Sales</button></div>
+                    <div id="sales-form" class="entry-form hidden">
+                        <h3>Daily Sales Record</h3>
+                        <form onsubmit="App.submitSales(event)">
+                            <div class="form-grid">
+                                <div class="field"><label>Date</label><input type="date" id="s-date" required></div>
+                                <div class="field"><label>Total Revenue ($)</label><input type="number" id="s-revenue" step="0.01" min="0" required></div>
+                                <div class="field"><label>Cover Count</label><input type="number" id="s-covers" min="0"></div>
+                                <div class="field full"><label>Notes</label><input type="text" id="s-notes" placeholder="Busy Saturday, event catering..."></div>
+                            </div>
+                            <div class="form-actions"><button type="submit" class="btn primary">Save Sales</button><button type="button" class="btn outline" onclick="App.toggleForm('sales-form')">Cancel</button></div>
+                        </form>
+                    </div>
+                    <div id="sales-table" class="data-table-wrap"></div>
+                </div>
+
+                <!-- Waste -->
+                <div id="page-waste" class="page">
+                    <div class="page-header"><div><h2>Waste Log</h2><p class="page-sub">Track spoilage and waste to reduce your biggest profit leaks.</p></div><button class="btn primary" onclick="App.toggleForm('waste-form')"><i data-lucide="plus" style="width:16px;height:16px;"></i> Log Waste</button></div>
+                    <div id="waste-form" class="entry-form hidden">
+                        <h3>Log Waste Entry</h3>
+                        <form onsubmit="App.submitWaste(event)">
+                            <div class="form-grid">
+                                <div class="field"><label>Date</label><input type="date" id="w-date" required></div>
+                                <div class="field"><label>Item Name</label><input type="text" id="w-item" placeholder="Chicken Breast" required></div>
+                                <div class="field"><label>Category</label><select id="w-category"><option value="protein">Protein</option><option value="produce">Produce</option><option value="dairy">Dairy</option><option value="dry_goods">Dry Goods</option><option value="beverages">Beverages</option><option value="frozen">Frozen</option><option value="bakery">Bakery</option><option value="other">Other</option></select></div>
+                                <div class="field"><label>Quantity</label><input type="number" id="w-qty" step="0.1" min="0" required></div>
+                                <div class="field"><label>Unit</label><input type="text" id="w-unit" placeholder="lbs, cases, each..."></div>
+                                <div class="field"><label>Est. Cost ($)</label><input type="number" id="w-cost" step="0.01" min="0"></div>
+                                <div class="field"><label>Reason</label><select id="w-reason" required><option value="over_prep">Over-Prep</option><option value="expired">Expired</option><option value="spoiled">Spoiled</option><option value="returned">Returned</option><option value="dropped">Dropped</option><option value="over_portioned">Over-Portioned</option><option value="other">Other</option></select></div>
+                                <div class="field full"><label>Notes</label><input type="text" id="w-notes" placeholder="Optional details..."></div>
+                            </div>
+                            <div class="form-actions"><button type="submit" class="btn primary">Log Waste</button><button type="button" class="btn outline" onclick="App.toggleForm('waste-form')">Cancel</button></div>
+                        </form>
+                    </div>
+                    <div id="waste-table" class="data-table-wrap"></div>
+                </div>
+
+                <!-- Inventory -->
+                <div id="page-inventory" class="page">
+                    <div class="page-header"><div><h2>Inventory Count</h2><p class="page-sub">Record stock counts to track on-hand value and usage.</p></div><button class="btn primary" onclick="App.toggleForm('inv-form')"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Count</button></div>
+                    <div id="inv-form" class="entry-form hidden">
+                        <h3>Inventory Count Entry</h3>
+                        <form onsubmit="App.submitInventory(event)">
+                            <div class="form-grid">
+                                <div class="field"><label>Date</label><input type="date" id="i-date" required></div>
+                                <div class="field"><label>Item Name</label><input type="text" id="i-item" placeholder="Chicken Breast" required></div>
+                                <div class="field"><label>Category</label><select id="i-category"><option value="protein">Protein</option><option value="produce">Produce</option><option value="dairy">Dairy</option><option value="dry_goods">Dry Goods</option><option value="beverages">Beverages</option><option value="frozen">Frozen</option><option value="bakery">Bakery</option><option value="other">Other</option></select></div>
+                                <div class="field"><label>Quantity</label><input type="number" id="i-qty" step="0.1" min="0" required></div>
+                                <div class="field"><label>Unit</label><input type="text" id="i-unit" placeholder="lbs, cases..."></div>
+                                <div class="field"><label>Unit Cost ($)</label><input type="number" id="i-cost" step="0.01" min="0"></div>
+                            </div>
+                            <div class="form-actions"><button type="submit" class="btn primary">Save Count</button><button type="button" class="btn outline" onclick="App.toggleForm('inv-form')">Cancel</button></div>
+                        </form>
+                    </div>
+                    <div id="inventory-table" class="data-table-wrap"></div>
+                </div>
+
+                <!-- Reports -->
+                <div id="page-reports" class="page">
+                    <div class="page-header"><div><h2>Weekly Report</h2><p class="page-sub">Analyze food cost, waste, and profit leaks for any week.</p></div><div class="header-controls"><label>Week Ending:</label><input type="date" id="report-date" onchange="App.loadReport()"><button class="btn primary" onclick="App.loadReport()">Generate</button></div></div>
+                    <div id="report-content" class="report-container"><p class="empty">Select a week end date and click Generate to see your report.</p></div>
+                </div>
+
+                <!-- Menu Items -->
+                <div id="page-menu" class="page">
+                    <div class="page-header"><div><h2>Menu Items</h2><p class="page-sub">Manage menu items and calculate per-dish food cost percentages.</p></div><button class="btn primary" onclick="App.toggleForm('menu-form')"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Item</button></div>
+                    <div id="menu-form" class="entry-form hidden">
+                        <h3>New Menu Item</h3>
+                        <form onsubmit="App.submitMenuItem(event)">
+                            <div class="form-grid">
+                                <div class="field"><label>Name</label><input type="text" id="m-name" placeholder="Grilled Chicken Sandwich" required></div>
+                                <div class="field"><label>Category</label><input type="text" id="m-cat" placeholder="Entrees, Appetizers..."></div>
+                                <div class="field"><label>Selling Price ($)</label><input type="number" id="m-price" step="0.01" min="0" required></div>
+                                <div class="field"><label>Recipe Cost ($)</label><input type="number" id="m-cost" step="0.01" min="0"></div>
+                            </div>
+                            <div class="form-actions"><button type="submit" class="btn primary">Save Item</button><button type="button" class="btn outline" onclick="App.toggleForm('menu-form')">Cancel</button></div>
+                        </form>
+                    </div>
+                    <div id="menu-table" class="data-table-wrap"></div>
+                </div>
+            
+                <!-- Invoice Scanner -->
+                <div id="page-scanner" class="page">
+                    <div class="page-header">
+                        <div>
+                            <h2>Invoice Scanner</h2>
+                            <p class="page-sub">Upload an invoice photo — AI extracts everything automatically</p>
+                        </div>
+                    </div>
+                    <div class="scanner-drop" id="scanner-drop" onclick="document.getElementById('scanner-input').click()">
+                        <span class="scanner-drop-icon">📄</span>
+                        <div class="scanner-drop-text">Drop invoice photo here or <span class="link">browse</span></div>
+                        <div class="scanner-drop-hint">Supports JPG, PNG — photos of paper invoices work great</div>
+                    </div>
+                    <input type="file" id="scanner-input" accept="image/*" style="display:none" onchange="App.handleScannerUpload(this)">
+                    <div id="scanner-loading" class="hidden" style="text-align:center;padding:64px">
+                        <div class="spinner-lg"></div>
+                        <p style="margin-top:20px;color:var(--text-secondary);font-size:15px">AI is reading your invoice...</p>
+                        <p style="margin-top:8px;color:var(--text-muted);font-size:13px">This usually takes 5-10 seconds</p>
+                    </div>
+                    <div id="scanner-results" class="hidden"></div>
+                </div>
+
+            </main>
+            <!-- FAB Quick Entry -->
+            <div class="fab" id="fab" onclick="App.toggleFab()" title="Quick entry">+</div>
+            <div class="fab-menu hidden" id="fab-menu">
+                <button class="fab-item" onclick="App.quickEntry('purchase')">🛒 Log Purchase</button>
+                <button class="fab-item" onclick="App.quickEntry('waste')">🗑️ Log Waste</button>
+                <button class="fab-item" onclick="App.quickEntry('scanner')">📄 Scan Invoice</button>
+            </div>
+
+        </div>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

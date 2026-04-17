@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auctusphere Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 40px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .logo { text-align: center; margin-bottom: 32px; }
+        .logo-icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 14px; font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+        h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+        .subtitle { color: #64748b; font-size: 13px; }
+        .gate { margin-bottom: 0; }
+        .gate-note { color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 18px; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .field input { width: 100%; padding: 12px 14px; background: #0f172a; border: 2px solid #334155; border-radius: 10px; color: #f8fafc; font-size: 14px; font-family: inherit; transition: 0.2s; }
+        .field input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .btn { width: 100%; padding: 13px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: 0.2s; margin-top: 4px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
+        .btn:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+        .btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .error { color: #f87171; font-size: 13px; margin-top: 10px; text-align: center; min-height: 20px; }
+        .success { color: #34d399; font-size: 13px; margin-top: 10px; text-align: center; }
+        .divider { border: none; border-top: 1px solid #334155; margin: 28px 0; }
+        .section-title { font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 20px; }
+        .restaurant-list { margin-top: 8px; }
+        .restaurant-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #0f172a; border-radius: 10px; margin-bottom: 8px; border: 1px solid #1e293b; }
+        .restaurant-name { font-size: 14px; font-weight: 600; }
+        .restaurant-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #451a03; }
+        #admin-panel { display: none; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 12px 18px; border-radius: 10px; color: white; font-size: 14px; font-weight: 500; animation: slideIn 0.3s ease; }
+        .toast.success { background: linear-gradient(135deg, #059669, #10b981); }
+        .toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+<div class="toast-wrap" id="toasts"></div>
+
+<div class="card">
+    <div class="logo">
+        <div class="logo-icon">A</div>
+        <h1>Admin Panel</h1>
+        <p class="subtitle">Auctusphere — Restaurant Management</p>
+    </div>
+
+    <!-- Gate: internal ops notice -->
+    <div id="gate-panel">
+        <p class="gate-note">
+            Internal ops screen for creating restaurant accounts and reviewing restaurant status.
+            Creating accounts uses the public onboarding flow. Viewing the restaurant list requires a valid admin JWT.
+        </p>
+        <button class="btn" onclick="unlock()">Continue to Ops Tools</button>
+    </div>
+
+    <!-- Admin panel (shown after password) -->
+    <div id="admin-panel">
+        <!-- Create Restaurant -->
+        <div class="section-title">Create New Restaurant Account</div>
+        <div class="field">
+            <label>Restaurant Name</label>
+            <input type="text" id="new-restaurant" placeholder="Joe's Diner">
+        </div>
+        <div class="field">
+            <label>Owner Name</label>
+            <input type="text" id="new-name" placeholder="Joe Smith">
+        </div>
+        <div class="field">
+            <label>Owner Email</label>
+            <input type="email" id="new-email" placeholder="joe@joesdiner.com">
+        </div>
+        <div class="two-col">
+            <div class="field">
+                <label>Password</label>
+                <input type="text" id="new-password" placeholder="Temp password">
+            </div>
+            <div class="field">
+                <label>Food Cost Target %</label>
+                <input type="number" id="new-target" value="30" min="15" max="50">
+            </div>
+        </div>
+        <div class="two-col">
+            <div class="field">
+                <label>City</label>
+                <input type="text" id="new-city" placeholder="Austin">
+            </div>
+            <div class="field">
+                <label>State</label>
+                <input type="text" id="new-state" placeholder="TX">
+            </div>
+        </div>
+        <button class="btn" id="create-btn" onclick="createRestaurant()">Create Restaurant Account</button>
+        <div class="error" id="create-error"></div>
+        <div class="success" id="create-success"></div>
+
+        <hr class="divider">
+
+        <!-- Restaurant List -->
+        <div class="section-title">Active Restaurants (<span id="count">—</span>)</div>
+        <div class="restaurant-list" id="restaurant-list">
+            <div style="color:#64748b;font-size:14px;">Loading...</div>
+        </div>
+
+        <hr class="divider">
+        <button class="btn danger" onclick="logout()">Sign Out</button>
+    </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin + '/api/v1';
+let adminToken = null;
+
+function toast(msg, type='success') {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+}
+
+async function unlock() {
+    const stored = localStorage.getItem('ath_admin_token');
+    if (stored) {
+        adminToken = stored;
+    }
+    document.getElementById('gate-panel').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadRestaurants();
+}
+
+async function apiRequest(method, path, body=null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (adminToken) opts.headers['Authorization'] = 'Bearer ' + adminToken;
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API_BASE + path, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Request failed');
+    return data;
+}
+
+async function createRestaurant() {
+    const btn = document.getElementById('create-btn');
+    const errEl = document.getElementById('create-error');
+    const successEl = document.getElementById('create-success');
+    errEl.textContent = '';
+    successEl.textContent = '';
+
+    const restaurant = document.getElementById('new-restaurant').value.trim();
+    const name = document.getElementById('new-name').value.trim();
+    const email = document.getElementById('new-email').value.trim();
+    const password = document.getElementById('new-password').value.trim();
+    const target = parseFloat(document.getElementById('new-target').value) || 30;
+    const city = document.getElementById('new-city').value.trim();
+    const state = document.getElementById('new-state').value.trim();
+
+    if (!restaurant || !name || !email || !password) {
+        errEl.textContent = 'Restaurant name, owner name, email, and password are required.';
+        return;
+    }
+    if (password.length < 8) {
+        errEl.textContent = 'Password must be at least 8 characters.';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+    try {
+        const data = await apiRequest('POST', '/tenants/onboard', {
+            restaurant_name: restaurant,
+            owner_name: name,
+            owner_email: email,
+            owner_password: password,
+            city: city || undefined,
+            state: state || undefined,
+            target_food_cost_pct: target,
+        });
+        successEl.textContent = `✓ Created "${restaurant}" — Login: ${email} / ${password}`;
+        toast('Restaurant created!');
+        // Clear form
+        ['new-restaurant','new-name','new-email','new-password','new-city','new-state'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('new-target').value = '30';
+        loadRestaurants();
+    } catch (err) {
+        errEl.textContent = err.message;
+        toast(err.message, 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Create Restaurant Account';
+}
+
+async function loadRestaurants() {
+    const listEl = document.getElementById('restaurant-list');
+    const countEl = document.getElementById('count');
+    if (!adminToken) {
+        listEl.innerHTML = '<div style="color:#64748b;font-size:14px;">Sign in with your admin account below to see the list.</div>';
+        return;
+    }
+    try {
+        const data = await apiRequest('GET', '/tenants/');
+        countEl.textContent = data.length;
+        if (!data.length) {
+            listEl.innerHTML = '<div style="color:#64748b;font-size:14px;">No restaurants yet.</div>';
+            return;
+        }
+        listEl.innerHTML = data.map(r => `
+            <div class="restaurant-item">
+                <div>
+                    <div class="restaurant-name">${r.name}</div>
+                    <div class="restaurant-meta">${r.city || ''}${r.city && r.state ? ', ' : ''}${r.state || ''} · Target: ${r.target_food_cost_pct}%</div>
+                </div>
+                <span class="badge">${r.subscription_tier}</span>
+            </div>
+        `).join('');
+    } catch (err) {
+        listEl.innerHTML = '<div style="color:#64748b;font-size:14px;">To see restaurant list, set your admin token below.</div>';
+        showTokenInput();
+    }
+}
+
+function showTokenInput() {
+    const existing = document.getElementById('token-input-wrap');
+    if (existing) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'token-input-wrap';
+    wrap.innerHTML = `
+        <hr class="divider">
+        <div class="section-title">Admin Token (for restaurant list)</div>
+        <div class="field"><label>Your JWT Token</label><input type="text" id="token-input" placeholder="Paste your login token here"></div>
+        <button class="btn" onclick="saveToken()" style="margin-bottom:0;">Save Token</button>
+    `;
+    document.getElementById('admin-panel').appendChild(wrap);
+}
+
+function saveToken() {
+    const t = document.getElementById('token-input').value.trim();
+    if (!t) return;
+    adminToken = t;
+    localStorage.setItem('ath_admin_token', t);
+    toast('Token saved!');
+    document.getElementById('token-input-wrap').remove();
+    loadRestaurants();
+}
+
+function logout() {
+    adminToken = null;
+    localStorage.removeItem('ath_admin_token');
+    document.getElementById('gate-panel').style.display = 'block';
+    document.getElementById('admin-panel').style.display = 'none';
+}
+</script>
+</body>
+</html>
