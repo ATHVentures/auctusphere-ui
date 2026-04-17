@@ -118,6 +118,7 @@ const API = {
     },
 
     async addMenuItem(data) { return this.request('POST', '/menu/items', data); },
+    async updateMenuItem(id, data) { return this.request('PUT', `/menu/items/${id}`, data); },
     async getMenuItems() { return this.request('GET', '/menu/items'); },
     async deleteMenuItem(id) { return this.request('DELETE', `/menu/items/${id}`); },
     async delete(path) { return this.request('DELETE', path); },

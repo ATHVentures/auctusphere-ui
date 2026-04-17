@@ -268,6 +268,25 @@ const App = {
 
             this.renderFoodCostChart(d.food_cost_trend, d.target_food_cost_pct);
             this.renderPurchaseChart(d.purchase_breakdown);
+
+            // Price alert banner
+            try {
+                const alerts = await API.getPriceAlerts();
+                const pending = alerts.filter(a => a.status === 'pending');
+                let banner = document.getElementById('dash-alert-banner');
+                if (pending.length > 0) {
+                    if (!banner) {
+                        banner = document.createElement('div');
+                        banner.id = 'dash-alert-banner';
+                        banner.className = 'alert-banner';
+                        const kpiGrid = document.querySelector('.kpi-grid');
+                        kpiGrid.parentNode.insertBefore(banner, kpiGrid);
+                    }
+                    banner.innerHTML = `<span>⚠️ You have <strong>${pending.length}</strong> price alert${pending.length > 1 ? 's' : ''} from your last invoice scan.</span><a onclick="App.navigate('alerts')" style="cursor:pointer;font-weight:600;text-decoration:underline;margin-left:8px">Review them →</a><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;margin-left:auto;font-size:18px;line-height:1;opacity:0.6;" title="Dismiss">×</button>`;
+                } else if (banner) {
+                    banner.remove();
+                }
+            } catch (_) { /* non-critical */ }
         } catch (err) {
             document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('loading'));
             console.error('Dashboard load error:', err);
@@ -449,6 +468,19 @@ const App = {
         form.scrollIntoView({ behavior: 'smooth' });
     },
 
+    editMenuItem(m) {
+        const form = document.getElementById('menu-form');
+        form.classList.remove('hidden');
+        document.getElementById('m-name').value = m.name;
+        document.getElementById('m-cat').value = m.category || '';
+        document.getElementById('m-price').value = m.selling_price;
+        document.getElementById('m-cost').value = m.recipe_cost || '';
+        form.dataset.editId = m.id;
+        form.querySelector('h3').textContent = 'Edit Menu Item';
+        form.querySelector('[type=submit]').textContent = 'Update Item';
+        form.scrollIntoView({ behavior: 'smooth' });
+    },
+
     async loadPurchases() {
         try {
             const data = await API.getPurchases();
@@ -551,7 +583,7 @@ const App = {
                 '<span class="amount">$' + m.selling_price.toFixed(2) + '</span>',
                 m.recipe_cost ? '$' + m.recipe_cost.toFixed(2) : '—',
                 m.recipe_cost ? ((m.recipe_cost / m.selling_price * 100).toFixed(1) + '%') : '—',
-                this.deleteBtn('menu/items', m.id, 'loadMenuItems'),
+                this.editBtn('editMenuItem', JSON.stringify(m)) + this.deleteBtn('menu/items', m.id, 'loadMenuItems'),
             ]);
             const html = this.buildTable(['Name', 'Category', 'Price', 'Cost', 'Food Cost %', ''], rows, {
                 icon: 'utensils',
@@ -793,16 +825,27 @@ const App = {
 
     async submitMenuItem(e) {
         e.preventDefault();
+        const form = e.target;
+        const editId = form.dataset.editId;
         try {
-            await API.addMenuItem({
+            const payload = {
                 name: document.getElementById('m-name').value,
                 category: document.getElementById('m-cat').value || undefined,
                 selling_price: parseFloat(document.getElementById('m-price').value),
                 recipe_cost: parseFloat(document.getElementById('m-cost').value) || undefined,
-            });
+            };
+            if (editId) {
+                await API.request('PUT', `/menu/items/${editId}`, payload);
+                delete form.dataset.editId;
+                this.toast('Menu item updated!', 'success');
+            } else {
+                await API.addMenuItem(payload);
+                this.toast('Menu item added!', 'success');
+            }
             this.toggleForm('menu-form');
-            e.target.reset();
-            this.toast('Menu item added!', 'success');
+            form.reset();
+            form.querySelector('h3').textContent = 'Add Menu Item';
+            form.querySelector('[type=submit]').textContent = 'Add Item';
             this.loadMenuItems();
         } catch (err) { this.toast('Error: ' + err.message, 'error'); }
     },
