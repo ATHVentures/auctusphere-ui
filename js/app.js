@@ -892,11 +892,16 @@ const App = {
 
     // ── FAB ──
     toggleFab() {
-        document.getElementById('fab-menu').classList.toggle('hidden');
+        const menu = document.getElementById('fab-menu');
+        const fab = document.getElementById('fab');
+        const isOpen = !menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        fab.style.transform = isOpen ? '' : 'rotate(45deg)';
     },
 
     quickEntry(type) {
         document.getElementById('fab-menu').classList.add('hidden');
+        document.getElementById('fab').style.transform = '';
         if (type === 'scanner') {
             this.navigate('scanner');
         } else if (type === 'purchase') {
