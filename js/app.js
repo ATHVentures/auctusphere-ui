@@ -945,13 +945,19 @@ const App = {
         const file = input.files[0];
         if (!file) return;
 
+        // Compress large images before uploading (limit to ~1.5MB for GPT vision)
+        let blob = file;
+        if (file.size > 1.5 * 1024 * 1024) {
+            blob = await this._resizeImage(file, 1.5 * 1024 * 1024);
+        }
+
         document.getElementById('scanner-drop').classList.add('hidden');
         document.getElementById('scanner-loading').classList.remove('hidden');
         document.getElementById('scanner-results').classList.add('hidden');
 
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', blob, file.name);
 
             const result = await API.scanInvoice(formData);
             this.renderScannerResults(result);
@@ -1132,6 +1138,33 @@ const App = {
             document.getElementById('report-content').innerHTML = '<p class="empty">Error loading report: ' + err.message + '</p>';
             this.toast('Report error: ' + err.message, 'error');
         }
+    },
+    // ── IMAGE RESIZE HELPERS ──
+    _resizeImage(file, maxBytes) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                let { width, height } = img;
+                const scale = Math.sqrt(maxBytes / file.size);
+                if (scale < 1) {
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                canvas.toBlob(resolve, 'image/jpeg', 0.88);
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                resolve(file);
+            };
+            img.src = url;
+        });
     },
 };
 
