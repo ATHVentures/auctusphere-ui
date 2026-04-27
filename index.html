@@ -37,6 +37,10 @@
                     <div style="text-align:center;margin-top:12px">
                         <button type="button" class="link-btn" onclick="App.showForgotPassword()">Forgot password?</button>
                     </div>
+                    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08)">
+                        <span style="color:rgba(255,255,255,0.45);font-size:13px">New to Auctusphere? </span>
+                        <button type="button" class="link-btn" style="font-size:13px;color:#a5b4fc;font-weight:600" onclick="App.showSignup()">Create free account →</button>
+                    </div>
                 </form>
                 <!-- Forgot Password Form -->
                 <form id="forgot-form" class="form" style="display:none">
@@ -52,7 +56,7 @@
                         <button type="button" class="link-btn" onclick="App.showLogin()">Back to sign in</button>
                     </div>
                 </form>
-                <form id="signup-form" class="form">
+                <form id="signup-form" class="form" style="display:none">
                     <div class="founding-badge" style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05));border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,0.7);text-align:center">
                         🎯 <strong style="color:#a5b4fc">Founding Member Access</strong> — Free during beta. You get full access while we build. Lock in founder pricing — price goes up at public launch.
                     </div>
@@ -89,6 +93,10 @@
                     <button type="submit" class="btn primary full">Start Free — Control Your Food Cost</button>
                     <div id="signup-error" class="error-msg"></div>
                     <div id="signup-success" class="success-msg"></div>
+                    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08)">
+                        <span style="color:rgba(255,255,255,0.45);font-size:13px">Already have an account? </span>
+                        <button type="button" class="link-btn" style="font-size:13px;color:#a5b4fc;font-weight:600" onclick="App.showLogin()">Sign in →</button>
+                    </div>
                 </form>
             </div>
         </div>

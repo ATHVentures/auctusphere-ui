@@ -43,6 +43,34 @@ const App = {
     showLogin() {
         document.getElementById('login-screen').classList.add('active');
         document.getElementById('main-app').classList.remove('active');
+        // Show login form, hide others
+        document.getElementById('login-form').classList.add('active');
+        document.getElementById('login-form').style.display = '';
+        document.getElementById('signup-form').classList.remove('active');
+        document.getElementById('signup-form').style.display = 'none';
+        const forgotForm = document.getElementById('forgot-form');
+        if (forgotForm) { forgotForm.style.display = 'none'; }
+    },
+
+    showSignup() {
+        document.getElementById('login-screen').classList.add('active');
+        document.getElementById('main-app').classList.remove('active');
+        document.getElementById('login-form').classList.remove('active');
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('signup-form').classList.add('active');
+        document.getElementById('signup-form').style.display = '';
+        const forgotForm = document.getElementById('forgot-form');
+        if (forgotForm) { forgotForm.style.display = 'none'; }
+    },
+
+    showForgotPassword() {
+        const forgotForm = document.getElementById('forgot-form');
+        const loginForm = document.getElementById('login-form');
+        if (forgotForm && loginForm) {
+            loginForm.style.display = 'none';
+            loginForm.classList.remove('active');
+            forgotForm.style.display = '';
+        }
     },
 
     showApp() {
