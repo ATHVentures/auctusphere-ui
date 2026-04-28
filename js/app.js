@@ -156,6 +156,41 @@ const App = {
             }
         });
 
+        // ── FORGOT PASSWORD FORM ──
+        const forgotFormEl = document.getElementById('forgot-form');
+        if (forgotFormEl) {
+            forgotFormEl.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const errEl = document.getElementById('forgot-error');
+                const successEl = document.getElementById('forgot-success');
+                const emailVal = document.getElementById('forgot-email').value.trim();
+                errEl.textContent = '';
+                successEl.textContent = '';
+                const submitBtn = forgotFormEl.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Sending...';
+                try {
+                    // Call password reset endpoint
+                    const res = await fetch(`${API.baseUrl}/auth/request-password-reset`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: emailVal }),
+                    });
+                    // Always show success to avoid email enumeration
+                    successEl.textContent = 'If that email is registered, you\'ll receive a reset link shortly. Check your inbox (and spam).';
+                    this.toast('Reset link sent if account exists.', 'success');
+                    document.getElementById('forgot-email').value = '';
+                } catch (err) {
+                    // Network error fallback — point to support
+                    successEl.textContent = 'If that email is registered, you\'ll receive a reset link shortly. If you need help, email projectath.ventures@gmail.com';
+                    this.toast('Request submitted.', 'info');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Send Reset Link';
+                }
+            });
+        }
+
         document.getElementById('logout-btn').addEventListener('click', () => {
             API.clearToken();
             this.toast('Signed out', 'info');
